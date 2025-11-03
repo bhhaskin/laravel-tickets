@@ -1,0 +1,64 @@
+{
+    "name": "bhhaskin/laravel-tickets",
+    "description": "Ticketing utilities for Laravel applications.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Bryan Haskin",
+            "email": "bhhaskin@bitsofsimplicity.com"
+        }
+    ],
+    "keywords": [
+        "laravel",
+        "tickets",
+        "support",
+        "issue-tracking"
+    ],
+    "require": {
+        "php": "^8.1",
+        "illuminate/auth": "^10.0 || ^11.0",
+        "illuminate/database": "^10.0 || ^11.0",
+        "illuminate/support": "^10.0 || ^11.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^8.0 || ^9.0",
+        "pestphp/pest": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Bhhaskin\\Tickets\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Bhhaskin\\Tickets\\Tests\\": "tests/",
+            "Bhhaskin\\Tickets\\Tests\\Database\\Factories\\": "tests/database/factories/",
+            "Bhhaskin\\Tickets\\Database\\Factories\\": "database/factories/",
+            "Bhhaskin\\Tickets\\Database\\Seeders\\": "database/seeders/",
+            "LaravelAudit\\": "tests/Stubs/LaravelAudit/",
+            "Bhhaskin\\LaravelWorkspaces\\": "tests/Stubs/LaravelWorkspaces/"
+        }
+    },
+    "suggest": {
+        "bhhaskin/laravel-audit": "Enable audit trail support for ticket activity"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Bhhaskin\\Tickets\\TicketsServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "pest"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "version": "0.1.0"
+}
