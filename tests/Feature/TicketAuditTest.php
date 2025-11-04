@@ -24,7 +24,8 @@ test('ticket lifecycle events are audited', function () {
         'subject' => 'DNS outage',
     ]);
 
-    $ticket->update(['status' => Ticket::STATUS_IN_PROGRESS]);
+    // Update a fillable field (subject) to trigger the updated event
+    $ticket->update(['subject' => 'DNS outage - Updated']);
     $ticket->delete();
 
     $audits = Audit::query()
@@ -50,9 +51,9 @@ test('ticket replies and attachments write audit records', function () {
     $team = Team::factory()->create();
     $site = Site::factory()->create();
 
-    $ticket->attachModel($team);
-    $ticket->attachModel($site);
-    $ticket->detachModel($team);
+    $ticket->attachModel($team, $user);
+    $ticket->attachModel($site, $user);
+    $ticket->detachModel($team, $user);
 
     $events = Audit::query()->pluck('event');
 

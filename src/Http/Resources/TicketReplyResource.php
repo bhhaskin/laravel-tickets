@@ -2,6 +2,7 @@
 
 namespace Bhhaskin\Tickets\Http\Resources;
 
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Str;
 
@@ -13,7 +14,7 @@ class TicketReplyResource extends JsonResource
     /**
      * @return array<string, mixed>
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $ticket = null;
 
@@ -31,11 +32,15 @@ class TicketReplyResource extends JsonResource
             'body_html' => $this->body !== null ? Str::markdown($this->body, config('tickets.markdown.options', [])) : null,
             'created_at' => optional($this->created_at)?->toIso8601String(),
             'updated_at' => optional($this->updated_at)?->toIso8601String(),
-            'author' => $this->whenLoaded('user', function () {
+            'author' => $this->whenLoaded('user', function () use ($request, $ticket) {
+                $canViewEmail = $request->user()
+                    && ((string) $request->user()->getAuthIdentifier() === (string) $this->user_id
+                        || ($ticket && $request->user()->can('view', $ticket)));
+
                 return [
                     'id' => $this->user->getAuthIdentifier(),
                     'name' => $this->user->name ?? null,
-                    'email' => $this->user->email ?? null,
+                    'email' => $canViewEmail ? ($this->user->email ?? null) : null,
                 ];
             }, [
                 'id' => $this->user_id,

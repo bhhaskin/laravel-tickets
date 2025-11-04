@@ -6,6 +6,8 @@ use Bhhaskin\Tickets\Database\Factories\TicketFactory;
 use Bhhaskin\Tickets\Models\TicketAssociation;
 use Bhhaskin\Tickets\Support\TicketAudit;
 use Bhhaskin\Tickets\Support\TicketWorkspace;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +15,7 @@ use Illuminate\Database\Eloquent\Model as EloquentModel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 /**
@@ -40,12 +43,16 @@ class Ticket extends Model
     public const PRIORITY_HIGH = 'high';
 
     protected $fillable = [
-        'user_id',
         'subject',
         'body',
-        'uuid',
-        'status',
         'priority',
+    ];
+
+    protected $guarded = [
+        'id',
+        'uuid',
+        'user_id',
+        'status',
         'closed_at',
         'last_replied_at',
     ];
@@ -58,6 +65,19 @@ class Ticket extends Model
     protected $attributes = [
         'status' => self::STATUS_NEW,
         'priority' => self::PRIORITY_NORMAL,
+    ];
+
+    protected static $validStatuses = [
+        self::STATUS_NEW,
+        self::STATUS_IN_PROGRESS,
+        self::STATUS_RESOLVED,
+        self::STATUS_CLOSED,
+    ];
+
+    protected static $validPriorities = [
+        self::PRIORITY_LOW,
+        self::PRIORITY_NORMAL,
+        self::PRIORITY_HIGH,
     ];
 
     protected static function booted(): void
@@ -100,8 +120,18 @@ class Ticket extends Model
         return TicketWorkspace::relation($this);
     }
 
-    public function attachModel(EloquentModel $model): void
+    public function attachModel(EloquentModel $model, ?Authenticatable $user = null): void
     {
+        $user = $user ?? auth()->user();
+
+        if (! $user) {
+            throw new AuthorizationException('Authentication required to attach models to tickets.');
+        }
+
+        if (! Gate::forUser($user)->allows('update', $this)) {
+            throw new AuthorizationException('Not authorized to attach models to this ticket.');
+        }
+
         $result = $this->related($model::class)->syncWithoutDetaching([$model->getKey()]);
 
         if (! empty($result['attached'])) {
@@ -113,8 +143,18 @@ class Ticket extends Model
         }
     }
 
-    public function detachModel(EloquentModel $model): void
+    public function detachModel(EloquentModel $model, ?Authenticatable $user = null): void
     {
+        $user = $user ?? auth()->user();
+
+        if (! $user) {
+            throw new AuthorizationException('Authentication required to detach models from tickets.');
+        }
+
+        if (! Gate::forUser($user)->allows('update', $this)) {
+            throw new AuthorizationException('Not authorized to detach models from this ticket.');
+        }
+
         $detached = $this->related($model::class)->detach($model->getKey());
 
         if ($detached > 0) {
@@ -171,5 +211,33 @@ class Ticket extends Model
             'status' => self::STATUS_IN_PROGRESS,
             'closed_at' => null,
         ])->save();
+    }
+
+    public function setStatusAttribute(string $value): void
+    {
+        if (! in_array($value, self::$validStatuses, true)) {
+            throw new \InvalidArgumentException("Invalid status: {$value}. Must be one of: ".implode(', ', self::$validStatuses));
+        }
+
+        $this->attributes['status'] = $value;
+    }
+
+    public function setPriorityAttribute(string $value): void
+    {
+        if (! in_array($value, self::$validPriorities, true)) {
+            throw new \InvalidArgumentException("Invalid priority: {$value}. Must be one of: ".implode(', ', self::$validPriorities));
+        }
+
+        $this->attributes['priority'] = $value;
+    }
+
+    public static function getValidStatuses(): array
+    {
+        return self::$validStatuses;
+    }
+
+    public static function getValidPriorities(): array
+    {
+        return self::$validPriorities;
     }
 }

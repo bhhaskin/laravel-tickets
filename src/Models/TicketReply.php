@@ -12,9 +12,13 @@ class TicketReply extends Model
     use HasFactory;
 
     protected $fillable = [
+        'body',
+    ];
+
+    protected $guarded = [
+        'id',
         'ticket_id',
         'user_id',
-        'body',
     ];
 
     protected static function booted(): void

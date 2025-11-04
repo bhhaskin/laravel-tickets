@@ -22,7 +22,11 @@ return new class extends Migration {
             $table->timestamp('last_replied_at')->nullable();
             $table->timestamps();
 
-            $table->index(['status', 'priority']);
+            // Indexes for common queries
+            $table->index('user_id'); // Already indexed by foreign key, but explicit for clarity
+            $table->index('created_at'); // For sorting by creation date
+            $table->index(['status', 'priority']); // For filtering by status and priority
+            $table->index(['status', 'created_at']); // For filtering open tickets by date
         });
     }
 

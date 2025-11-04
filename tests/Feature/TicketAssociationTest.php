@@ -17,9 +17,9 @@ test('tickets can attach arbitrary models', function () {
     $team = Team::factory()->create();
     $site = Site::factory()->create();
 
-    $ticket->attachModel($team);
-    $ticket->attachModel($site);
-    $ticket->attachModel($team); // attaching again should not duplicate
+    $ticket->attachModel($team, $user);
+    $ticket->attachModel($site, $user);
+    $ticket->attachModel($team, $user); // attaching again should not duplicate
 
     $ticket->load(['associations.ticketable']);
 
@@ -30,13 +30,13 @@ test('tickets can attach arbitrary models', function () {
     expect($team->tickets)->toHaveCount(1)
         ->and($site->tickets)->toHaveCount(1);
 
-    $ticket->detachModel($team);
+    $ticket->detachModel($team, $user);
     $ticket->load('associations.ticketable');
 
     expect($ticket->associations)->toHaveCount(1)
         ->and($ticket->related(Team::class)->count())->toBe(0);
 
-    $ticket->attachModel($team);
+    $ticket->attachModel($team, $user);
 
     $ticket->load(['user', 'replies', 'associations.ticketable']);
     $resource = (new TicketResource($ticket))->toArray(ticketResourceRequest());

@@ -19,6 +19,10 @@ return new class extends Migration {
                 ->cascadeOnDelete();
             $table->text('body');
             $table->timestamps();
+
+            // Indexes for common queries
+            $table->index('user_id'); // For finding all replies by a user
+            $table->index(['ticket_id', 'created_at']); // For ordered replies on a ticket
         });
     }
 

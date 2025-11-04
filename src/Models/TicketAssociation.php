@@ -10,11 +10,7 @@ class TicketAssociation extends Model
 {
     protected $table = 'ticketables';
 
-    protected $fillable = [
-        'ticket_id',
-        'ticketable_type',
-        'ticketable_id',
-    ];
+    protected $guarded = ['*'];
 
     public function ticket(): BelongsTo
     {

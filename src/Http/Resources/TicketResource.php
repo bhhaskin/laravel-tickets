@@ -34,11 +34,15 @@ class TicketResource extends JsonResource
                 : ($this->relationLoaded('replies') ? $this->replies->count() : 0),
             'created_at' => optional($this->created_at)?->toIso8601String(),
             'updated_at' => optional($this->updated_at)?->toIso8601String(),
-            'owner' => $this->whenLoaded('user', function () {
+            'owner' => $this->whenLoaded('user', function () use ($request) {
+                $canViewEmail = $request->user()
+                    && ((string) $request->user()->getAuthIdentifier() === (string) $this->user_id
+                        || $request->user()->can('viewAny', $this->resource));
+
                 return [
                     'id' => $this->user->getAuthIdentifier(),
                     'name' => $this->user->name ?? null,
-                    'email' => $this->user->email ?? null,
+                    'email' => $canViewEmail ? ($this->user->email ?? null) : null,
                 ];
             }, [
                 'id' => $this->user_id,
