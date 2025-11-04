@@ -24,9 +24,22 @@ class TicketAssociationResource extends JsonResource
                 'id' => $this->ticket_id,
             ],
             'model' => $this->when($this->relationLoaded('ticketable') && $this->ticketable, function () {
-                return method_exists($this->ticketable, 'toArray')
-                    ? $this->ticketable->toArray()
-                    : (array) $this->ticketable;
+                // Only expose basic information to prevent data leaks
+                // If the model has a toResource method or is a JsonResource, use it
+                // Otherwise, only expose the ID and type
+                if ($this->ticketable instanceof \Illuminate\Http\Resources\Json\JsonResource) {
+                    return $this->ticketable;
+                }
+
+                if (method_exists($this->ticketable, 'toResource')) {
+                    return $this->ticketable->toResource();
+                }
+
+                // Fallback: only expose minimal safe data
+                return [
+                    'id' => $this->ticketable->getKey(),
+                    'type' => $this->ticketable_type,
+                ];
             }),
         ];
     }

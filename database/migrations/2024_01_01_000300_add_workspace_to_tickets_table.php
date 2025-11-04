@@ -9,7 +9,11 @@ return new class extends Migration {
     {
         Schema::table('tickets', function (Blueprint $table) {
             if (! Schema::hasColumn('tickets', 'workspace_id')) {
-                $table->unsignedBigInteger('workspace_id')->nullable()->after('user_id')->index();
+                $table->unsignedBigInteger('workspace_id')->nullable()->after('user_id');
+
+                // Indexes for workspace queries
+                $table->index('workspace_id');
+                $table->index(['workspace_id', 'status']); // For filtering workspace tickets by status
             }
         });
     }
@@ -18,6 +22,7 @@ return new class extends Migration {
     {
         Schema::table('tickets', function (Blueprint $table) {
             if (Schema::hasColumn('tickets', 'workspace_id')) {
+                $table->dropIndex(['workspace_id', 'status']);
                 $table->dropIndex(['workspace_id']);
                 $table->dropColumn('workspace_id');
             }
